@@ -71,57 +71,57 @@ module.exports.getNewToken = function getNewToken(oAuth2Client, resolve) {
 }
 
 /**
- * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+ * Get sheet data
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-module.exports.listMajors = function listMajors(auth) {
+module.exports.getSheet = function getSheet(auth, params) {
   const sheets = google.sheets({
     version: 'v4',
     auth
   });
-  sheets.spreadsheets.values.get({
-    spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-    range: 'Class Data!A2:E',
-  }, (err, res) => {
-    if (err) return console.log('The API returned an error: ' + err);
-    const rows = res.data.values;
-    if (rows.length) {
-      console.log('Name, Major:');
-      // Print columns A and E, which correspond to indices 0 and 4.
-      rows.map((row) => {
-        console.log(`${row[0]}, ${row[4]}`);
-      });
-    } else {
-      console.log('No data found.');
-    }
-  });
+  return new Promise((resolve, reject) => {
+    sheets.spreadsheets.values.get(params, (err, res) => {
+      if (err) return console.log('The API returned an error: ' + err);
+      resolve(res.data);
+    });
+  })
+}
+
+function moveFileToPublicFolder(auth, spreadsheetId) {
+  const drive = google.drive({
+    version: 'v3',
+    auth
+  })
+  return new Promise((resolve, reject) => {
+    drive.files.update({
+      fileId: spreadsheetId,
+      addParents: '1PbG3D7gtJ1SJkE136qA1emsIE5vKYBeT',
+      fields: 'id, parents'
+    }, function (err, res) {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(res)
+      }
+    });
+  })
 }
 
 /**
  * Create a new sheet.
+ * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
 module.exports.createSheet = function createSheet(auth, resource) {
   const sheets = google.sheets({
     version: 'v4',
     auth
   });
-  const drive = google.drive({
-    version: 'v2',
-    auth
-  })
   return sheets.spreadsheets.create({
     resource,
     fields: 'spreadsheetId',
   }).then(async (res) => {
-    await drive.permissions.insert({
-      fileId: res.data.spreadsheetId,
-      requestBody: {
-        type: 'anyone',
-        role: 'writer',
-      }
-    })
-    return `https://docs.google.com/spreadsheets/d/${res.data.spreadsheetId}`
+    await moveFileToPublicFolder(auth, res.data.spreadsheetId)
+    return res.data.spreadsheetId
   }).catch((err) => {
     console.log('The API returned an error: ' + err);
   })
