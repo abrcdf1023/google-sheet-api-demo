@@ -17,12 +17,10 @@ const SCOPES = [
 const TOKEN_PATH = 'token.json';
 
 /**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
+ * Create an OAuth2 client with the given credentials.
  * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
  */
-export function authorize(credentials, callback) {
+module.exports.authorize = function authorize(credentials) {
   const {
     client_secret,
     client_id,
@@ -30,22 +28,24 @@ export function authorize(credentials, callback) {
   } = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
     client_id, client_secret, redirect_uris[0]);
-
-  // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getNewToken(oAuth2Client, callback);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client);
-  });
+  return new Promise((resolve, reject) => {
+    try {
+      const token = fs.readFileSync(TOKEN_PATH);
+      oAuth2Client.setCredentials(JSON.parse(token));
+      resolve(oAuth2Client);
+    } catch (err) {
+      getNewToken(oAuth2Client, resolve);
+    }
+  })
 }
 
 /**
  * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
+ * execute the given resolve with the authorized OAuth2 client.
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
+ * @param {getEventsResolve} resolve The resolve for the authorized client.
  */
-export function getNewToken(oAuth2Client, callback) {
+module.exports.getNewToken = function getNewToken(oAuth2Client, resolve) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -65,7 +65,7 @@ export function getNewToken(oAuth2Client, callback) {
         if (err) return console.error(err);
         console.log('Token stored to', TOKEN_PATH);
       });
-      callback(oAuth2Client);
+      resolve(oAuth2Client);
     });
   });
 }
@@ -75,7 +75,7 @@ export function getNewToken(oAuth2Client, callback) {
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-export function listMajors(auth) {
+module.exports.listMajors = function listMajors(auth) {
   const sheets = google.sheets({
     version: 'v4',
     auth
@@ -101,7 +101,7 @@ export function listMajors(auth) {
 /**
  * Create a new sheet.
  */
-export function createSheet(auth) {
+module.exports.createSheet = function createSheet(auth, resource) {
   const sheets = google.sheets({
     version: 'v4',
     auth
@@ -111,11 +111,7 @@ export function createSheet(auth) {
     auth
   })
   return sheets.spreadsheets.create({
-    resource: {
-      properties: {
-        title: 'TEST sheet2',
-      }
-    },
+    resource,
     fields: 'spreadsheetId',
   }).then(async (res) => {
     await drive.permissions.insert({
@@ -128,5 +124,5 @@ export function createSheet(auth) {
     return `https://docs.google.com/spreadsheets/d/${res.data.spreadsheetId}`
   }).catch((err) => {
     console.log('The API returned an error: ' + err);
-  }
+  })
 }
