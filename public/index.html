@@ -7,9 +7,33 @@
   <title>Google sheet integrate Demo</title>
 </head>
 <body>
-  Hello
+  <p>新增表單</p>
+  <input id="input" placeholder="標題" />
+  <button id="button">送出</button>
+  <div>
+    <iframe id="iframe" src="" frameborder="0" style="width: 100%;height: 600px;"></iframe>
+  </div>
   <script>
-    
+    const iframe = document.getElementById('iframe')
+    const input = document.getElementById('input')
+    const button = document.getElementById('button')
+
+    function fetchPostSheet() {
+      fetch('/api/v1/sheet', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: input.value
+        }),
+      }).then((res) => res.json()).then((data) => {
+        iframe.setAttribute('src', data.sheetUrl)
+      })
+    }
+
+    button.addEventListener('click', fetchPostSheet)
+
   </script>
 </body>
 </html>
