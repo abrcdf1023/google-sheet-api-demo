@@ -41,7 +41,7 @@
           title: input.value
         }),
       }).then((res) => res.json()).then((data) => {
-        iframe.setAttribute('src', data.sheetUrl)
+        iframe.setAttribute('src', data.spreadsheetUrl)
         spreadsheetId = data.spreadsheetId
       })
     }

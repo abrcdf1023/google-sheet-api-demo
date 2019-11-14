@@ -20,15 +20,10 @@ app.get(`/api/${API_VERSION}/sheet`, async (req, res) => {
 
 app.post(`/api/${API_VERSION}/sheet`, async (req, res) => {
   const auth = await authorize(credentials);
-  const spreadsheetId = await createSheet(auth, {
-    properties: {
-      title: req.body.title,
-    }
+  const data = await createSheet(auth, {
+    title: req.body.title,
   })
-  res.send({
-    sheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
-    spreadsheetId
-  });
+  res.send(data);
 })
 
 app.listen(3000)
