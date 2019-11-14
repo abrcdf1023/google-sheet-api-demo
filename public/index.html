@@ -38,7 +38,7 @@
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          title: input.value
+          name: input.value
         }),
       }).then((res) => res.json()).then((data) => {
         iframe.setAttribute('src', data.spreadsheetUrl)

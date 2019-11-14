@@ -21,9 +21,12 @@ app.get(`/api/${API_VERSION}/sheet`, async (req, res) => {
 app.post(`/api/${API_VERSION}/sheet`, async (req, res) => {
   const auth = await authorize(credentials);
   const data = await createSheet(auth, {
-    title: req.body.title,
+    name: req.body.name,
   })
-  res.send(data);
+  res.send({
+    spreadsheetUrl: data.webViewLink,
+    spreadsheetId: data.id,
+  });
 })
 
 app.listen(3000)
