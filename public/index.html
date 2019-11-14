@@ -13,23 +13,12 @@
   <div>
     <iframe id="iframe" src="" frameborder="0" style="width: 100%;height: 600px;"></iframe>
   </div>
-  <button id="button2">取得資料</button>
-  <div id="result">
 
   </div>
   <script>
     const iframe = document.getElementById('iframe')
     const input = document.getElementById('input')
     const button = document.getElementById('button')
-    const button2 = document.getElementById('button2')
-    const result = document.getElementById('result')
-    let spreadsheetId
-
-    function fetchGetSheet() {
-      fetch(`/api/v1/sheet?spreadsheetId=${spreadsheetId}`).then((data) => {
-        result.innerText = data
-      })
-    }
 
     function fetchPostSheet() {
       fetch('/api/v1/sheet', {
@@ -41,14 +30,12 @@
           name: input.value
         }),
       }).then((res) => res.json()).then((data) => {
-        iframe.setAttribute('src', data.spreadsheetUrl)
-        spreadsheetId = data.spreadsheetId
+        console.log(data.spreadsheetUrl)
+        iframe.setAttribute('src', `${data.spreadsheetUrl}&rm=minimal`)
       })
     }
 
-    button2.addEventListener('click', fetchGetSheet)
     button.addEventListener('click', fetchPostSheet)
-
   </script>
 </body>
 </html>
